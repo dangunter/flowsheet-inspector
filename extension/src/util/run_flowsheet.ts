@@ -19,6 +19,17 @@ const NO_INTERPRETER_MSG =
     'installed via the interpreter selector in the Flowsheet Inspector sidebar.';
 
 /**
+ * Get args for running th 'ifi' command, which is the flowsheet inspector lib's CLI 
+ * interface, through the Python interpreter with 'python -c'.
+ * 
+ * The args should be a list of values as would be passed directly to 'ifi' on the console.
+ */
+const getIfiPythonArgs = (args: string[]) => {
+    const quotedArgs = args.map((x) => "'" + x + "'").join(",");
+    const cmd = "import sys; from idaes_fi.commands import main; sys.exit(main([" + quotedArgs + "]))";
+    return ["-c", cmd];
+}
+/**
  * Runs fi-run for the flowsheet file currently stored in VS Code global state.
  *
  * Resolves the active interpreter from the VS Code Python extension, locates
@@ -54,10 +65,20 @@ export default async function runFlowsheet(
             return;
         }
 
-        const args: string[] = ['-m', 'idaes_fi.structfs.fsrunner', activateFileName];
+        // Build args to run flowsheet
+        const flowsheetVarName = null; // TODO: Get from user
+        const args = ["flowsheet", "run", "-f", activateFileName];
         if (selectedStep) {
-            args.push('--last', selectedStep);
+            args.push("-l", selectedStep);
         }
+        if (flowsheetVarName) {
+            args.push("-n", flowsheetVarName);
+        }
+        const ipArgs = getIfiPythonArgs(args);
+        // const args: string[] = ['-m', 'idaes_fi.structfs.fsrunner', activateFileName];
+        // if (selectedStep) {
+        //     args.push('--last', selectedStep);
+        // }
 
         const childEnv: NodeJS.ProcessEnv = {
             ...activatedProcessEnv(env),
@@ -88,7 +109,7 @@ export default async function runFlowsheet(
         let finalStepStatusCount = 0;
         try {
             stepStatusPoller = startStepStatusPolling(baselineReportId);
-            await runTerminalCommand(env.interpreterPath, args, childEnv);
+            await runTerminalCommand(env.interpreterPath, ipArgs, childEnv);
         } finally {
             stopStepStatusPolling(stepStatusPoller);
             // The interval can miss the very last step row written as fi-run
