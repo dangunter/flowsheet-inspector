@@ -1,10 +1,10 @@
 import * as vscode from 'vscode';
 import { brodcastMessage, activateWebviews } from './webview_handler';
-import { isWrappedFlowsheet } from './validate_flowsheet';
+import { getFlowsheetRunners } from './validate_flowsheet';
 import { trimFileName } from './trim_file_name';
 import { checkActivePythonEnv } from './extension_initial_check';
 import { checkRequiredPackages } from './check_required_packages';
-import { runFiSteps } from './run_fi_steps';
+import { getFlowsheetSteps } from './get_flowsheet_steps';
 import { onDidChangeActivePythonEnv, broadcastCurrentPythonEnv, getActivePythonEnv } from './python_env';
 
 function getOpenPythonFiles() {
@@ -78,7 +78,7 @@ export default function activateTabListener(context: vscode.ExtensionContext) {
         if (!activatedFileName || document.fileName !== activatedFileName) {
             return;
         }
-        if (!document.fileName.endsWith('.py') || !isWrappedFlowsheet(document.fileName)) {
+        if (!document.fileName.endsWith('.py') || !getFlowsheetRunners(document.fileName)) {
             return;
         }
         console.log(`Active flowsheet ${document.fileName} was saved, broadcasting rerun notice`);
@@ -125,14 +125,15 @@ export default function activateTabListener(context: vscode.ExtensionContext) {
                     webViewPanel.title = `Prommis Flowsheet Inspector - ${activateFileName}`;
                 }
 
-                if (!isWrappedFlowsheet(currentActivateTabFileName)) {
-                    console.log(`File ${currentActivateTabFileName} does not appear to be a flowsheet (no @FS.step("build") found), skipping fi-steps.`);
+                const runners = getFlowsheetRunners(currentActivateTabFileName);
+                if (!runners.length) {
+                    console.log(`File ${currentActivateTabFileName} does not appear to have a FlowsheetRunner`);
                     context.globalState.update("activatedFileName", currentActivateTabFileName);
                     brodcastMessage({
                         type: 'switch_tab',
                         activate_tab_name: activateFileName,
                         idaesRunInfo: null,
-                        initError: `"${activateFileName}" is not a wrapped flowsheet file.\nFlowsheet Inspector requires @FS.step("build") to be present in the file.`,
+                        initError: `"${activateFileName}" does not appear to have a FlowsheetRunner defined`,
                         // Tells the frontend this file doesn't take over the
                         // run results: e.g. clicking a traceback link opens a
                         // lib/site-packages file, which must not wipe the
@@ -180,7 +181,7 @@ export default function activateTabListener(context: vscode.ExtensionContext) {
 
                 let stepsData: any;
                 try {
-                    stepsData = await runFiSteps(currentActivateTabFileName);
+                    stepsData = await getFlowsheetSteps(currentActivateTabFileName);
                 } catch (err: any) {
                     console.error(`Error running fi-steps during tab switch: ${err.message}`);
                     stepsData = null;
