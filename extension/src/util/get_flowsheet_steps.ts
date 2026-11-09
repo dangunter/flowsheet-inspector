@@ -43,7 +43,7 @@ export async function getFlowsheetSteps(fileName: string): Promise<IFiStepsResul
     }
 
     return new Promise<IFiStepsResult>((resolve, reject) => {
-        const ifiArgs = ['--json', 'flowsheet', 'steps', '-f', fileName]
+        const ifiArgs = ['--json', 'flowsheet', 'steps', '-f', fileName, '-n', 'runner']
         const args = getIfiPythonArgs(ifiArgs);
         const child = cp.spawn(
             env.interpreterPath,
@@ -62,10 +62,9 @@ export async function getFlowsheetSteps(fileName: string): Promise<IFiStepsResul
         child.stderr.on('data', (d) => { stderr += d.toString(); });
         child.on('error', reject);
         child.on('close', (code) => {
-            const cmdString = `ifi ${ifiArgs.join(' ')}`;
             if (code !== 0) {
                 const errDetail = stderr.trim() || stdout.trim() || '(no output)';
-                reject(new Error(`Getting flowsheet steps with command "${cmdString}" failed (exit ${code}): ${errDetail}`));
+                reject(new Error(`Getting flowsheet steps failed (exit ${code}) python-args=[[ ${args} ]]: ${errDetail}`));
                 return;
             }
             // Parse JSON output of the `flowsheet steps` command
@@ -74,13 +73,13 @@ export async function getFlowsheetSteps(fileName: string): Promise<IFiStepsResul
             const lines = stdout.trim().split('\n');
             const jsonLine = lines.reverse().find((l) => l.trim().startsWith('['));
             if (!jsonLine) {
-                errMessage = `No JSON array found in output of command "${cmdString}" to get flowsheet steps.`;
+                errMessage = `No JSON array found in output python-args=[[ ${args} ]] to get flowsheet steps.`;
             }
             else {
                 try {
                     parsedSteps = JSON.parse(jsonLine.trim());
                 } catch (e) {
-                    errMessage = `Failed to parse JSON array from output of command "${cmdString}" to get flowsheet steps.`;
+                    errMessage = `Failed to parse JSON array from output python-args=[[ ${args} ]] to get flowsheet steps.`;
                 }
             }
             if (errMessage != '') {

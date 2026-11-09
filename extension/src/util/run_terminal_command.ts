@@ -105,9 +105,11 @@ function runTerminalCommand(
  * ["flowsheet", "run", "-f", "myfile.py"] as the `args` array.
  */
 const getIfiPythonArgs = (args: string[]) => {
-    const quotedArgs = args.map((x) => "r'" + x + "'").join(",");
-    const cmd = "import sys; from idaes_fi.commands import main; sys.exit(main([" + quotedArgs + "]))";
-    return ["-c", cmd];
-}
+    const cmd =
+        `import sys; from idaes_fi.commands import main; ` +
+        `sys.exit(main(${JSON.stringify(args)}))`;
+
+    return ['-c', cmd];
+};
 
 export { getIfiPythonArgs, runTerminalCommand };
