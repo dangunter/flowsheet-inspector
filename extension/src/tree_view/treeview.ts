@@ -118,7 +118,7 @@ export default function treeview(context: vscode.ExtensionContext) {
                     resolvedStepsData = await getFlowsheetSteps(fileName);
                     console.log(resolvedStepsData);
                 } catch (err: any) {
-                    console.error(`Error running fi-steps during tree view load: ${err.message}`);
+                    console.error(`Error running getting flowsheet stepsduring tree view load: ${err.message}`);
                     webviewView.webview.postMessage({
                         type: 'switch_tab',
                         activate_tab_name: trimFileName(fileName),

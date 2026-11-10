@@ -43,7 +43,7 @@ export async function getFlowsheetSteps(fileName: string): Promise<IFiStepsResul
     }
 
     return new Promise<IFiStepsResult>((resolve, reject) => {
-        const ifiArgs = ['--json', 'flowsheet', 'steps', '-f', fileName, '-n', 'runner']
+        const ifiArgs = ['--json', 'flowsheet', 'steps', '-f', fileName]
         const args = getIfiPythonArgs(ifiArgs);
         const child = cp.spawn(
             env.interpreterPath,
@@ -71,15 +71,15 @@ export async function getFlowsheetSteps(fileName: string): Promise<IFiStepsResul
             let errMessage = '';
             let parsedSteps: string[] = [];
             const lines = stdout.trim().split('\n');
-            const jsonLine = lines.reverse().find((l) => l.trim().startsWith('['));
+            const jsonLine = lines.reverse().find((s) => s.trim().startsWith('{'));
             if (!jsonLine) {
-                errMessage = `No JSON array found in output python-args=[[ ${args} ]] to get flowsheet steps.`;
+                errMessage = `No JSON object found in output python-args=[[ ${args} ]] to get flowsheet steps.`;
             }
             else {
                 try {
                     parsedSteps = JSON.parse(jsonLine.trim());
                 } catch (e) {
-                    errMessage = `Failed to parse JSON array from output python-args=[[ ${args} ]] to get flowsheet steps.`;
+                    errMessage = `Failed to parse JSON object from output python-args=[[ ${args} ]] to get flowsheet steps.`;
                 }
             }
             if (errMessage != '') {

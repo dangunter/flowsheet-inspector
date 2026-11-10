@@ -64,6 +64,7 @@ export default async function runFlowsheet(
             args.push("-n", flowsheetVarName);
         }
         const ipArgs = getIfiPythonArgs(args);
+        console.info("Running flowsheet: [python]", ipArgs.join(' '));
         // const args: string[] = ['-m', 'idaes_fi.structfs.fsrunner', activateFileName];
         // if (selectedStep) {
         //     args.push('--last', selectedStep);
