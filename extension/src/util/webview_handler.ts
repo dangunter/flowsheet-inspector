@@ -38,17 +38,16 @@ export function setResultsPanelTitle(filePath: string) {
 
 // brodcast message to all active webviews
 export function brodcastMessage(message: any) {
-    console.log(`Brodcasting message: ${JSON.stringify(message)} to all active webviews...`);
-    if (activateWebviews.size === 0) {
-        console.log('No active webviews found! Cannot brodcast message!');
-        return;
+    const n = activateWebviews.size;
+    if (n > 0) {
+        console.debug(`Broadcasting message to ${n} active webviews...`);
+        activateWebviews.forEach(webview => {
+            webview.webview.postMessage(message);
+        });
+        console.debug(`Successfully broadcasted message to ${n} active webviews`);
+    } else {
+        console.debug(`No active webviews: will not broadcast message`);
     }
-
-    activateWebviews.forEach(webview => {
-        webview.webview.postMessage(message);
-    });
-
-    console.log('Successfully brodcasted message to all active webviews!');
 }
 
 export { activateWebviews };

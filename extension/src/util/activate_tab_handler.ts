@@ -181,7 +181,7 @@ export default function activateTabListener(context: vscode.ExtensionContext) {
 
                 let stepsData: any;
                 try {
-                    console.debug(`[activate_tab_handler] Getting flowsheet steps for file: ${fileName}`);
+                    console.debug(`[activate_tab_handler] Getting flowsheet steps for file: ${currentActivateTabFileName}`);
                     stepsData = await getFlowsheetSteps(currentActivateTabFileName);
                 } catch (err: any) {
                     console.error(`Error getting flowsheet steps during tab switch: ${err.message}`);
