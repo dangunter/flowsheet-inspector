@@ -112,9 +112,10 @@ export default function treeview(context: vscode.ExtensionContext) {
                     : [];
                 console.log(`[treeview] package warnings: ${JSON.stringify(packageWarnings)}`);
 
-                // 6. Run fi-steps with the selected interpreter to get step info
+                // 6. Get step info
                 let resolvedStepsData: any = null;
                 try {
+                    console.debug(`[treeview] Getting flowsheet steps for file: ${fileName}`);
                     resolvedStepsData = await getFlowsheetSteps(fileName);
                     console.log(resolvedStepsData);
                 } catch (err: any) {
